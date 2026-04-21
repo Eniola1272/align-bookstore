@@ -39,7 +39,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function OrdersPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
