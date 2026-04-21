@@ -1,5 +1,5 @@
 /**
- * Readerboard Design Tokens
+ * Align Bookstore Design Tokens
  * Single source of truth for all design constants used across components.
  * Tailwind config references these for utility generation.
  * Components import these for dynamic/conditional styling.

@@ -78,12 +78,12 @@ export default function RegisterPage() {
         <div className="text-center">
           <div className="flex justify-center mb-4">
             <div className="w-12 h-12 bg-gradient-to-br from-brand-600 to-brand-400 rounded-xl flex items-center justify-center shadow-glow">
-              <span className="text-white font-bold text-2xl" style={{ fontFamily: 'DM Sans, sans-serif' }}>R</span>
+              <span className="text-white font-bold text-2xl" style={{ fontFamily: 'DM Sans, sans-serif' }}>A</span>
             </div>
           </div>
           <h2 className="text-3xl text-brand-950">Create your account</h2>
           <p className="mt-2 text-brand-500 text-sm">
-            Join Readerboard and start tracking your reading
+            Create an account to start shopping at Align Bookstore
           </p>
         </div>
 
