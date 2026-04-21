@@ -2,7 +2,7 @@ import { Providers } from './providers';
 import './globals.css';
 
 export const metadata = {
-  title: 'PageTurn — Books You\'ll Love',
+  title: 'Align Bookstore — Books You\'ll Love',
   description: 'Discover thousands of pre-loved and new books at unbeatable prices. Fiction, Non-Fiction, Mystery, Romance and more.',
 };
 

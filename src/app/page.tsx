@@ -188,10 +188,10 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Why PageTurn */}
+      {/* Why Align */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-serif text-brand-950">Why PageTurn?</h2>
+          <h2 className="text-3xl font-serif text-brand-950">Why Align?</h2>
           <p className="text-brand-500 mt-2">We&apos;re not just a bookstore — we&apos;re a community of readers</p>
         </div>
         <div className="grid sm:grid-cols-3 gap-8">
@@ -258,7 +258,7 @@ export default async function HomePage() {
                 <svg className="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
                 </svg>
-                PageTurn
+                Align
               </h3>
               <p className="text-sm leading-relaxed">Your destination for quality books at great prices.</p>
             </div>
@@ -288,7 +288,7 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="border-t border-brand-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
-            <p>&copy; {new Date().getFullYear()} PageTurn. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Align. All rights reserved.</p>
             <div className="flex gap-4">
               <span className="cursor-default hover:text-white transition-colors">Privacy Policy</span>
               <span className="cursor-default hover:text-white transition-colors">Terms of Service</span>

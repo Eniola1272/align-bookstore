@@ -42,7 +42,7 @@ export default function BookCard({ book }: BookCardProps) {
   }
 
   return (
-    <Link href={`/books/₦{book._id}`} className="group block">
+    <Link href={`/books/${book._id}`} className="group block">
       <div className="bg-white rounded-card border border-brand-100 overflow-hidden hover:border-brand-300 hover:shadow-soft transition-all duration-200">
         {/* Cover */}
         <div className="relative aspect-[2/3] overflow-hidden bg-brand-50">

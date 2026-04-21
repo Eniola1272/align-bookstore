@@ -1,4 +1,4 @@
-# PageTurn
+# Align Bookstore
 
 **A bookstore for book lovers.** Browse thousands of pre-loved and new books, add them to your cart, and check out securely with Paystack. Every great story deserves a reader.
 

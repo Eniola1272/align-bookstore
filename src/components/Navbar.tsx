@@ -29,7 +29,7 @@ export default function Navbar() {
                 </svg>
               </div>
               <span className="text-xl font-serif font-normal text-brand-950 hidden sm:block tracking-tight">
-                PageTurn
+                Align
               </span>
             </Link>
 
