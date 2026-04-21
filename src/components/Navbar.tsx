@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
+import { AppData } from '@/lib/data';
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -35,32 +36,17 @@ export default function Navbar() {
 
             {/* Desktop Links */}
             <div className="hidden md:flex items-center gap-6">
-              <Link
-                href="/shop"
-                className={`text-sm font-medium transition-colors ${
-                  isActive('/shop') ? 'text-brand-600' : 'text-brand-500 hover:text-brand-950'
-                }`}
-              >
-                Shop
-              </Link>
-              <Link
-                href="/shop?genre=Fiction"
-                className="text-sm font-medium text-brand-500 hover:text-brand-950 transition-colors"
-              >
-                Fiction
-              </Link>
-              <Link
-                href="/shop?genre=Non-Fiction"
-                className="text-sm font-medium text-brand-500 hover:text-brand-950 transition-colors"
-              >
-                Non-Fiction
-              </Link>
-              <Link
-                href="/shop?bestseller=true"
-                className="text-sm font-medium text-brand-500 hover:text-brand-950 transition-colors"
-              >
-                Bestsellers
-              </Link>
+              {AppData.navLinks.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`text-sm font-medium transition-colors ${
+                    isActive(href) ? 'text-brand-600' : 'text-brand-500 hover:text-brand-950'
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
               {session && (
                 <Link
                   href="/orders"
@@ -209,12 +195,7 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden border-t border-brand-200 py-4 space-y-1">
-            {[
-              { href: '/shop', label: 'Shop' },
-              { href: '/shop?genre=Fiction', label: 'Fiction' },
-              { href: '/shop?genre=Non-Fiction', label: 'Non-Fiction' },
-              { href: '/shop?bestseller=true', label: 'Bestsellers' },
-            ].map(({ href, label }) => (
+            {AppData.navLinks.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
