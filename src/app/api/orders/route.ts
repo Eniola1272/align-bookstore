@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth/authOptions';
 import connectDB from '@/lib/db/mongodb';
 import { Order } from '@/lib/db/models/Order';
 import { Book } from '@/lib/db/models/Book';
+import { calculateShipping } from '@/lib/shipping';
 
 function generateOrderNumber() {
   const ts = Date.now().toString(36).toUpperCase();
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const shippingCost = subtotal >= 50 ? 0 : 5;
+    const shippingCost = calculateShipping(subtotal, shippingAddress?.city || '');
     const total = subtotal + shippingCost;
 
     const order = await Order.create({

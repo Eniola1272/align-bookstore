@@ -111,14 +111,11 @@ export default function CartDrawer() {
               <span className="text-brand-500">Subtotal</span>
               <span className="font-semibold text-brand-950">₦{subtotal.toLocaleString()}</span>
             </div>
-            {subtotal < 50000 && (
-              <p className="text-xs text-brand-400">
-                Add ₦{(50000 - subtotal).toLocaleString()} more for free shipping
-              </p>
-            )}
-            {subtotal >= 50 && (
-              <p className="text-xs text-green-600 font-medium">Free shipping applied!</p>
-            )}
+            <p className="text-xs text-brand-400">
+              {subtotal >= 50000
+                ? '🎉 Free delivery on Ibadan orders!'
+                : `Free Ibadan delivery on orders over ₦50,000`}
+            </p>
             <Link
               href="/cart"
               onClick={closeCart}

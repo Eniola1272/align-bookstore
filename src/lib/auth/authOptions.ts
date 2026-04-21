@@ -71,9 +71,11 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        await connectDB();
+        const dbUser = await User.findById(user.id).select('role');
+        token.role = (dbUser?.role as 'user' | 'admin') || 'user';
       }
 
-      // Update session on profile change
       if (trigger === 'update' && session) {
         token = { ...token, ...session };
       }
@@ -83,13 +85,13 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        
-        // Fetch latest user data
+
         await connectDB();
         const user = await User.findById(token.id);
         if (user) {
           session.user.name = user.name;
           session.user.image = user.avatar;
+          session.user.role = (user.role as 'user' | 'admin') || 'user';
         }
       }
       return session;

@@ -8,6 +8,7 @@ export interface IUser {
   password?: string;
   avatar?: string;
   provider: 'email' | 'google';
+  role: 'user' | 'admin';
   pagesRead: number;
   booksCompleted: number;
   createdAt: Date;
@@ -46,6 +47,11 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: ['email', 'google'],
       default: 'email',
+    },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
     },
     pagesRead: {
       type: Number,

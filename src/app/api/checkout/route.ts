@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/authOptions';
+import { calculateShipping } from '@/lib/shipping';
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || '';
 const PAYSTACK_INIT_URL = 'https://api.paystack.co/transaction/initialize';
@@ -22,14 +23,14 @@ export async function POST(req: NextRequest) {
       (sum: number, i: { price: number; quantity: number }) => sum + i.price * i.quantity,
       0
     );
-    const shippingCost = subtotal >= 50000 ? 0 : 1500;
+    const shippingCost = calculateShipping(subtotal, shippingAddress?.city || '');
     const total = subtotal + shippingCost;
 
     // Paystack amount is in kobo (1 NGN = 100 kobo)
     const amountInKobo = Math.round(total * 100);
 
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const reference = `PAGETURN-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const reference = `ALIGN-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     const paystackRes = await fetch(PAYSTACK_INIT_URL, {
       method: 'POST',

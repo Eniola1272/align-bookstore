@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth/adminCheck';
 import connectDB from '@/lib/db/mongodb';
 import { Book } from '@/lib/db/models/Book';
 
@@ -62,6 +63,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const { adminError } = await requireAdmin();
+  if (adminError) return adminError;
+
   try {
     await connectDB();
     const body = await req.json();

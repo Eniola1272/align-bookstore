@@ -6,6 +6,7 @@ import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
+import { calculateShipping, isIbadan, FREE_SHIPPING_THRESHOLD } from '@/lib/shipping';
 
 interface ShippingForm {
   fullName: string;
@@ -36,7 +37,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const shipping = subtotal >= 50000 ? 0 : 1500;
+  const shipping = calculateShipping(subtotal, form.city);
   const total = subtotal + shipping;
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
@@ -285,8 +286,20 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-brand-500">Shipping</span>
-                    <span className={shipping === 0 ? 'text-green-600 font-medium' : ''}>{shipping === 0 ? 'Free' : `₦${shipping.toLocaleString()}`}</span>
+                    <span className={shipping === 0 ? 'text-green-600 font-medium' : ''}>
+                      {!form.city ? '—' : shipping === 0 ? 'Free' : `₦${shipping.toLocaleString()}`}
+                    </span>
                   </div>
+                  {form.city && isIbadan(form.city) && subtotal < FREE_SHIPPING_THRESHOLD && (
+                    <p className="text-xs text-brand-400">
+                      Add ₦{(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString()} more for free Ibadan delivery
+                    </p>
+                  )}
+                  {form.city && !isIbadan(form.city) && (
+                    <p className="text-xs text-brand-400">
+                      Free delivery available for Ibadan orders over ₦{FREE_SHIPPING_THRESHOLD.toLocaleString()}
+                    </p>
+                  )}
                   <div className="flex justify-between font-bold text-base border-t border-brand-100 pt-2 mt-2">
                     <span>Total</span>
                     <span className="text-brand-700">₦{total.toLocaleString()}</span>

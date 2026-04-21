@@ -9,8 +9,8 @@ export default function CartPage() {
   const { items, removeItem, updateQuantity, subtotal, clearCart } = useCart();
   const router = useRouter();
 
-  const shipping = subtotal >= 50000 ? 0 : 1500;
-  const total = subtotal + shipping;
+  // Shipping is calculated at checkout based on delivery city
+  const total = subtotal;
 
   if (items.length === 0) {
     return (
@@ -124,19 +124,13 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-brand-500">Shipping</span>
-                  {shipping === 0 ? (
-                    <span className="font-medium text-green-600">Free</span>
-                  ) : (
-                    <span className="font-medium text-brand-950">₦{shipping.toLocaleString()}</span>
-                  )}
+                  <span className="text-brand-400 text-xs italic">Calculated at checkout</span>
                 </div>
-                {shipping > 0 && (
-                  <p className="text-xs text-brand-400">
-                    Add ₦{(50000 - subtotal).toLocaleString()} more for free shipping
-                  </p>
-                )}
+                <p className="text-xs text-brand-400">
+                  Free delivery on Ibadan orders over ₦50,000
+                </p>
                 <div className="border-t border-brand-100 pt-3 flex justify-between text-base">
-                  <span className="font-semibold text-brand-950">Total</span>
+                  <span className="font-semibold text-brand-950">Subtotal</span>
                   <span className="font-bold text-brand-700 text-xl">₦{total.toLocaleString()}</span>
                 </div>
               </div>
