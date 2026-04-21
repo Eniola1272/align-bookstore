@@ -1,254 +1,158 @@
-# 📚 Readerboard
+# PageTurn
 
-**Turn reading into a competition.** Track your reading progress, compete with friends, and climb the leaderboard. Every page counts. Every book matters.
+**A bookstore for book lovers.** Browse thousands of pre-loved and new books, add them to your cart, and check out securely with Paystack. Every great story deserves a reader.
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)](https://www.mongodb.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-![Readerboard Demo](./public/demo.png)
+## Features
 
-## ✨ Features
+- **Book Catalogue** — Browse books by genre, condition, rating, or search by title/author
+- **Product Pages** — Detailed book pages with cover, description, condition badge, stock status, and related books
+- **Shopping Cart** — Persistent cart (survives page refresh), slide-out drawer, quantity controls
+- **Paystack Checkout** — Secure NGN payments via Paystack's hosted payment page
+- **Order History** — View all past orders with status tracking
+- **Authentication** — Sign in with Google OAuth or email/password
+- **Responsive Design** — Works on all screen sizes
 
-- 🔐 **Authentication** - Secure login with Google OAuth or email
-- 📖 **PDF Reader** - Built-in reader with dark mode and progress tracking
-- 📊 **Automatic Tracking** - Every page turn is tracked automatically
-- 🏆 **Global Leaderboard** - Compete with readers worldwide
-- 📚 **Personal Library** - Upload and organize your books
-- 💾 **Resume Reading** - Pick up exactly where you left off
-- 📱 **Responsive Design** - Works seamlessly on all devices
-- 🎯 **Progress Tracking** - Unique page visit tracking (no double-counting)
+## Tech Stack
 
-## 🚀 Tech Stack
+- **Framework** — Next.js 14 (App Router)
+- **Language** — TypeScript
+- **Styling** — Tailwind CSS
+- **Database** — MongoDB Atlas + Mongoose
+- **Auth** — NextAuth.js (Google + Credentials)
+- **Payments** — Paystack
 
-### Frontend
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **PDF Viewer**: @react-pdf-viewer
-- **Authentication**: NextAuth.js
-
-### Backend
-- **Database**: MongoDB Atlas
-- **ODM**: Mongoose
-- **API**: Next.js API Routes
-- **File Storage**: Local filesystem (upgradeable to S3/Vercel Blob)
-
-## 📦 Installation
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - MongoDB Atlas account
-- Google OAuth credentials (optional)
+- Paystack account
 
 ### 1. Clone the repository
+
 ```bash
-git clone https://github.com/Eniola1272/readerboard.git
-cd readerboard
+git clone https://github.com/Eniola1272/pageturn-bookstore.git
+cd pageturn-bookstore
 ```
 
 ### 2. Install dependencies
+
 ```bash
 npm install
 ```
 
 ### 3. Set up environment variables
-Create a `.env.local` file in the root directory:
+
+Copy the example file and fill in your values:
+
+```bash
+cp .env.local.example .env.local
+```
 
 ```env
 # MongoDB
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/readerboard?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/pageturn?retryWrites=true&w=majority
 
 # NextAuth
 NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret-key-here-generate-with-openssl
+NEXTAUTH_SECRET=your-secret-here
 
 # Google OAuth (optional)
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# Paystack — get these from dashboard.paystack.com > Settings > API Keys
+PAYSTACK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_test_...
 ```
 
-**Generate NEXTAUTH_SECRET:**
+Generate a `NEXTAUTH_SECRET`:
+
 ```bash
 openssl rand -base64 32
 ```
 
-### 4. Create uploads directory
+### 4. Seed the database
+
 ```bash
-mkdir -p public/uploads
+node scripts/seed.js
 ```
 
+This inserts 20 books across multiple genres with real cover images.
+
 ### 5. Run the development server
+
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
-## 🗄️ Database Schema
+## Project Structure
 
-### User
-```typescript
-{
-  email: String,
-  name: String,
-  username: String,
-  pagesRead: Number,
-  booksCompleted: Number,
-  joinDate: Date,
-  lastActive: Date
-}
+```
+src/
+├── app/
+│   ├── page.tsx                  # Homepage
+│   ├── shop/                     # Browse catalogue
+│   ├── books/[id]/               # Product detail page
+│   ├── cart/                     # Shopping cart
+│   ├── checkout/                 # Checkout form
+│   ├── orders/                   # Order history + success page
+│   └── api/
+│       ├── products/             # Book listing + single product
+│       ├── checkout/             # Paystack transaction init
+│       ├── verify-payment/       # Paystack payment verification
+│       └── orders/               # Order creation + history
+├── components/
+│   ├── BookCard.tsx              # Product card
+│   ├── CartDrawer.tsx            # Slide-out cart
+│   └── Navbar.tsx
+└── context/
+    └── CartContext.tsx           # Global cart state (localStorage)
 ```
 
-### Book
-```typescript
-{
-  title: String,
-  author: String,
-  totalPages: Number,
-  fileUrl: String,
-  fileType: 'pdf' | 'epub',
-  uploadedBy: ObjectId,
-  thumbnail: String,
-  createdAt: Date
-}
-```
+## Payment Flow
 
-### Progress
-```typescript
-{
-  userId: ObjectId,
-  bookId: ObjectId,
-  currentPage: Number,
-  visitedPages: Number[],
-  pagesRead: Number,
-  startDate: Date,
-  lastReadDate: Date,
-  completed: Boolean
-}
-```
+1. User fills in shipping details on `/checkout`
+2. App calls `POST /api/checkout` → Paystack initializes a transaction
+3. User is redirected to Paystack's hosted payment page
+4. On success, Paystack redirects to `/orders/success?reference=xxx`
+5. App calls `GET /api/verify-payment?reference=xxx` → verifies with Paystack and creates the order
 
-## 🎯 Usage
+## API Routes
 
-### Upload a Book
-1. Sign in to your account
-2. Navigate to "Upload Book"
-3. Fill in book details (title, author, total pages)
-4. Upload your PDF file
-5. Start reading!
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/products` | List books (supports `genre`, `condition`, `bestseller`, `search`, `sort`, `page`) |
+| GET | `/api/products/:id` | Single book |
+| POST | `/api/checkout` | Initialize Paystack transaction |
+| GET | `/api/verify-payment` | Verify payment + create order |
+| GET | `/api/orders` | Current user's orders |
+| GET | `/api/orders/:id` | Single order |
 
-### Track Your Progress
-- Open any book from your library
-- Read normally - pages are tracked automatically
-- Close and return anytime - progress is saved
-- Check the leaderboard to see your ranking
+## Deployment
 
-### Compete on the Leaderboard
-- Global leaderboard shows top 100 readers
-- Rankings update in real-time
-- Each unique page read counts toward your total
-- No double-counting - re-reading the same page doesn't add points
+### Vercel
 
-## 🛠️ API Routes
+1. Push to GitHub
+2. Import the project in [Vercel](https://vercel.com)
+3. Add all environment variables from `.env.local`
+4. Set `NEXTAUTH_URL` to your production domain
+5. Deploy
 
-### Authentication
-- `POST /api/auth/signin` - Sign in
-- `POST /api/auth/signout` - Sign out
-- `GET /api/auth/session` - Get current session
+## Author
 
-### Books
-- `GET /api/books` - Get all books
-- `POST /api/books/upload` - Upload a new book
-- `GET /api/books?userId=:id` - Get user's books
-
-### Progress
-- `POST /api/progress` - Update reading progress
-- `GET /api/progress?bookId=:id` - Get progress for a book
-
-### Leaderboard
-- `GET /api/leaderboard` - Get top 100 readers
-
-## 🚢 Deployment
-
-### Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Import project in [Vercel](https://vercel.com)
-3. Add environment variables
-4. Deploy!
-
-```bash
-vercel --prod
-```
-
-### Environment Variables for Production
-Update your `.env` with production values:
-- Set `NEXTAUTH_URL` to your domain
-- Update `GOOGLE_CLIENT_ID` authorized redirect URIs
-- Use production MongoDB connection string
-
-### File Storage
-For production, consider upgrading to:
-- **AWS S3** - Scalable cloud storage
-- **Vercel Blob** - Easy integration with Vercel
-- **Cloudinary** - With image optimization
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 🐛 Known Issues
-
-- Large PDFs (>50MB) may take time to load
-- EPUB support is limited (PDFs recommended)
-- Page tracking relies on unique page visits
-
-## 📋 Roadmap
-
-- [ ] Reading streaks and daily goals
-- [ ] Friends system and private leaderboards
-- [ ] Book recommendations algorithm
-- [ ] Mobile app (React Native)
-- [ ] Reading statistics and analytics
-- [ ] Book clubs and reading challenges
-- [ ] Social features (comments, reviews)
-- [ ] Dark/light theme toggle
-- [ ] Audiobook support
-- [ ] Offline reading capability
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👨‍💻 Author
-
-**Your Name**
+**Eniola Aderounmu**
 - GitHub: [@Eniola1272](https://github.com/Eniola1272)
 - Twitter: [@eniaderounmu](https://twitter.com/eniaderounmu)
 
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/) - The React framework
-- [NextAuth.js](https://next-auth.js.org/) - Authentication
-- [MongoDB](https://www.mongodb.com/) - Database
-- [React PDF Viewer](https://react-pdf-viewer.dev/) - PDF rendering
-- [Tailwind CSS](https://tailwindcss.com/) - Styling
-
-## 📞 Support
-
-If you have any questions or run into issues:
-- Open an [issue](https://github.com/Eniola1272/readerboard/issues)
-- Email: aderounmueniola60@gmail.com
-
 ---
 
-**⭐ If you like this project, please give it a star!**
-
-Built with ❤️ and ☕
+Built with Next.js, MongoDB, and Paystack.
