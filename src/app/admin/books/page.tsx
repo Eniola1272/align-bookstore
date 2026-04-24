@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface Book {
   _id: string;
@@ -62,8 +63,9 @@ export default function AdminBooksPage() {
     if (res.ok) {
       setBooks(prev => prev.filter(b => b._id !== id));
       setTotal(prev => prev - 1);
+      toast.success(`"${title}" removed from catalog.`);
     } else {
-      alert('Failed to delete book.');
+      toast.error('Failed to delete book. Please try again.');
     }
     setDeleting(null);
   }

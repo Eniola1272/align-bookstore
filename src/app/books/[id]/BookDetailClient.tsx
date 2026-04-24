@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import BookCard from '@/components/BookCard';
+import { toast } from 'sonner';
 
 interface Book {
   _id: string;
@@ -67,6 +68,7 @@ export default function BookDetailClient({
     }
     setAdded(true);
     openCart();
+    toast.success(`${quantity > 1 ? `${quantity}× ` : ''}"${book.title}" added to cart.`);
     setTimeout(() => setAdded(false), 2000);
   }
 

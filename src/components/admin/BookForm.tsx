@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 export interface BookFormData {
   title: string;
@@ -47,7 +48,6 @@ export default function BookForm({ initialData, bookId }: Props) {
   const router = useRouter();
   const [form, setForm] = useState<BookFormData>({ ...empty, ...initialData });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [previewError, setPreviewError] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
@@ -61,7 +61,6 @@ export default function BookForm({ initialData, bookId }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     const payload = {
@@ -98,19 +97,17 @@ export default function BookForm({ initialData, bookId }: Props) {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error || 'Failed to save book.');
+      toast.error(data.error || 'Failed to save book.');
       return;
     }
 
+    toast.success(bookId ? 'Book updated successfully.' : 'Book added to catalog.');
     router.push('/admin/books');
     router.refresh();
   }
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>
-      )}
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left column */}

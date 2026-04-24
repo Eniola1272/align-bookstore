@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface Order {
   _id: string;
@@ -58,7 +59,6 @@ export default function AdminOrderDetailPage() {
   const [status, setStatus] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
   const [notes, setNotes] = useState('');
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     fetch(`/api/orders/${id}`)
@@ -74,7 +74,6 @@ export default function AdminOrderDetailPage() {
 
   async function handleSave() {
     setSaving(true);
-    setSaved(false);
     const res = await fetch(`/api/orders/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -83,8 +82,9 @@ export default function AdminOrderDetailPage() {
     if (res.ok) {
       const updated: Order = await res.json();
       setOrder(updated);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      toast.success('Order updated successfully.');
+    } else {
+      toast.error('Failed to update order.');
     }
     setSaving(false);
   }
@@ -258,7 +258,7 @@ export default function AdminOrderDetailPage() {
               >
                 {saving ? (
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : saved ? '✓ Saved' : 'Save Changes'}
+                ) : 'Save Changes'}
               </button>
             </div>
           </div>

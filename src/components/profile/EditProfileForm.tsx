@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
 
 interface EditProfileFormProps {
   user: {
@@ -17,7 +18,6 @@ export default function EditProfileForm({ user }: EditProfileFormProps) {
   const router = useRouter();
   const { update } = useSession();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: user.name,
     username: user.username,
@@ -27,7 +27,6 @@ export default function EditProfileForm({ user }: EditProfileFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const res = await fetch('/api/user/profile', {
@@ -42,16 +41,12 @@ export default function EditProfileForm({ user }: EditProfileFormProps) {
         throw new Error(data.error || 'Failed to update profile');
       }
 
-      await update({
-        name: formData.name,
-        image: formData.avatar,
-      });
-
+      await update({ name: formData.name, image: formData.avatar });
+      toast.success('Profile updated successfully.');
       router.push('/profile');
       router.refresh();
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Something went wrong';
-      setError(errorMessage);
+      toast.error(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -59,12 +54,6 @@ export default function EditProfileForm({ user }: EditProfileFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-card shadow-soft p-6 space-y-6">
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-          {error}
-        </div>
-      )}
-
       <div>
         <label className="block text-sm font-medium text-brand-950 mb-2">
           Name

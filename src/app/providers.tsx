@@ -2,6 +2,7 @@
 
 import { SessionProvider } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
+import { Toaster } from 'sonner';
 import Navbar from '@/components/Navbar';
 import { CartProvider } from '@/context/CartContext';
 import CartDrawer from '@/components/CartDrawer';
@@ -18,6 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         {!isAdmin && <CartDrawer />}
         {children}
         {!isAdmin && <Footer />}
+        <Toaster position="top-right" richColors closeButton />
       </CartProvider>
     </SessionProvider>
   );

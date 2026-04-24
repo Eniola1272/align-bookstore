@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
 import { calculateShipping, isIbadan, FREE_SHIPPING_THRESHOLD } from '@/lib/shipping';
 
@@ -35,7 +36,6 @@ export default function CheckoutPage() {
     country: 'Nigeria',
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const shipping = calculateShipping(subtotal, form.city);
   const total = subtotal + shipping;
@@ -46,7 +46,6 @@ export default function CheckoutPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
 
     if (!session) {
       signIn();
@@ -69,7 +68,7 @@ export default function CheckoutPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Checkout failed. Please try again.');
+        toast.error(data.error || 'Checkout failed. Please try again.');
         return;
       }
 
@@ -78,7 +77,7 @@ export default function CheckoutPage() {
         window.location.href = data.url;
       }
     } catch {
-      setError('Something went wrong. Please try again.');
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -126,12 +125,6 @@ export default function CheckoutPage() {
             >
               Sign In
             </button>
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-card text-sm text-red-700">
-            {error}
           </div>
         )}
 

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -12,7 +13,6 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,20 +21,19 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
+      toast.error('Password must be at least 8 characters');
       return;
     }
 
     if (formData.username.length < 3) {
-      setError('Username must be at least 3 characters');
+      toast.error('Username must be at least 3 characters');
       return;
     }
 
@@ -64,8 +63,7 @@ export default function RegisterPage() {
         callbackUrl: '/library',
       });
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Something went wrong';
-      setError(errorMessage);
+      toast.error(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -109,12 +107,6 @@ export default function RegisterPage() {
             <span className="px-3 bg-white text-brand-400">Or register with email</span>
           </div>
         </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {[
