@@ -1,69 +1,40 @@
-import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import connectDB from "@/lib/db/mongodb";
-import User from "@/lib/db/models/User";
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getProfileByUsername, createProfile } from '@/lib/supabase/queries';
 
 export async function POST(req: NextRequest) {
   try {
     const { name, email, username, password } = await req.json();
 
-    // Validation
     if (!name || !email || !username || !password) {
-      return NextResponse.json(
-        { error: "All fields are required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
-
     if (password.length < 8) {
-      return NextResponse.json(
-        { error: "Password must be at least 8 characters" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
     }
 
-    await connectDB();
+    const existing = await getProfileByUsername(username);
+    if (existing) return NextResponse.json({ error: 'Username already taken' }, { status: 400 });
 
-    // Check if user exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }],
-    });
-
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "Email or username already exists" },
-        { status: 400 }
-      );
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Create user
-    const user = await User.create({
-      name,
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
-      username,
-      password: hashedPassword,
-      provider: "email",
+      password,
+      email_confirm: true,
+      user_metadata: { name, username },
     });
 
-    return NextResponse.json(
-      {
-        success: true,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          username: user.username,
-        },
-      },
-      { status: 201 }
-    );
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    console.error("Registration error:", errorMessage);
-    return NextResponse.json({ error: "Registration failed" }, { status: 500 });
+    if (error) {
+      if (error.message.includes('already registered')) {
+        return NextResponse.json({ error: 'Email already registered' }, { status: 400 });
+      }
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    await createProfile({ id: data.user.id, name, username, role: 'user' });
+
+    return NextResponse.json({ success: true }, { status: 201 });
+  } catch (error) {
+    console.error('Register error:', error);
+    return NextResponse.json({ error: 'Registration failed' }, { status: 500 });
   }
 }

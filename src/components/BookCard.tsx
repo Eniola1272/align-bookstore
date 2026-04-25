@@ -6,11 +6,11 @@ import { useCart } from '@/context/CartContext';
 
 interface BookCardProps {
   book: {
-    _id: string;
+    id: string;
     title: string;
     author: string;
     price: number;
-    originalPrice?: number;
+    originalPrice?: number | null;
     coverImage: string;
     genre: string;
     condition: string;
@@ -32,7 +32,7 @@ export default function BookCard({ book }: BookCardProps) {
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault();
     addItem({
-      bookId: book._id,
+      bookId: book.id,
       title: book.title,
       author: book.author,
       coverImage: book.coverImage,
@@ -42,7 +42,7 @@ export default function BookCard({ book }: BookCardProps) {
   }
 
   return (
-    <Link href={`/books/${book._id}`} className="group block">
+    <Link href={`/books/${book.id}`} className="group block">
       <div className="bg-white rounded-card border border-brand-100 overflow-hidden hover:border-brand-300 hover:shadow-soft transition-all duration-200">
         {/* Cover */}
         <div className="relative aspect-[2/3] overflow-hidden bg-brand-50">

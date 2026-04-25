@@ -26,7 +26,7 @@ const SORT_OPTIONS = [
 ];
 
 interface Book {
-  _id: string;
+  id: string;
   title: string;
   author: string;
   price: number;
@@ -328,7 +328,7 @@ export default function ShopContent() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
                 {books.map(book => (
-                  <BookCard key={book._id} book={book} />
+                  <BookCard key={book.id} book={book} />
                 ))}
               </div>
             )}

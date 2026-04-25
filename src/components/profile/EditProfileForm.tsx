@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 
 interface EditProfileFormProps {
@@ -16,7 +15,6 @@ interface EditProfileFormProps {
 
 export default function EditProfileForm({ user }: EditProfileFormProps) {
   const router = useRouter();
-  const { update } = useSession();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: user.name,
@@ -41,7 +39,6 @@ export default function EditProfileForm({ user }: EditProfileFormProps) {
         throw new Error(data.error || 'Failed to update profile');
       }
 
-      await update({ name: formData.name, image: formData.avatar });
       toast.success('Profile updated successfully.');
       router.push('/profile');
       router.refresh();

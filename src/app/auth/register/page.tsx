@@ -1,93 +1,72 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    username: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const router = useRouter();
+  const supabase = createClient();
+  const [formData, setFormData] = useState({ name: '', email: '', username: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      toast.error('Password must be at least 8 characters');
-      return;
-    }
-
-    if (formData.username.length < 3) {
-      toast.error('Username must be at least 3 characters');
-      return;
-    }
+    if (formData.password !== formData.confirmPassword) { toast.error('Passwords do not match'); return; }
+    if (formData.password.length < 8) { toast.error('Password must be at least 8 characters'); return; }
+    if (formData.username.length < 3) { toast.error('Username must be at least 3 characters'); return; }
 
     setLoading(true);
-
     try {
       const res = await fetch('/api/user/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          username: formData.username.toLowerCase(),
-          password: formData.password,
-        }),
+        body: JSON.stringify({ name: formData.name, email: formData.email, username: formData.username.toLowerCase(), password: formData.password }),
       });
-
       const data = await res.json();
+      if (!res.ok) { toast.error(data.error || 'Registration failed'); return; }
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Registration failed');
-      }
+      // Sign in automatically after registration
+      const { error } = await supabase.auth.signInWithPassword({ email: formData.email, password: formData.password });
+      if (error) { toast.error('Account created — please sign in.'); router.push('/auth/signin'); return; }
 
-      await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        callbackUrl: '/library',
-      });
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Something went wrong');
+      router.push('/');
+      router.refresh();
+    } catch {
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  async function handleGoogle() {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface py-12 px-4">
       <div className="max-w-md w-full space-y-6 bg-white rounded-card shadow-soft border border-brand-200 p-8">
-        {/* Logo */}
         <div className="text-center">
           <div className="flex justify-center mb-4">
             <div className="w-12 h-12 bg-gradient-to-br from-brand-600 to-brand-400 rounded-xl flex items-center justify-center shadow-glow">
-              <span className="text-white font-bold text-2xl" style={{ fontFamily: 'DM Sans, sans-serif' }}>A</span>
+              <span className="text-white font-bold text-2xl">A</span>
             </div>
           </div>
           <h2 className="text-3xl text-brand-950">Create your account</h2>
-          <p className="mt-2 text-brand-500 text-sm">
-            Create an account to start shopping at Align Bookstore
-          </p>
+          <p className="mt-2 text-brand-500 text-sm">Start shopping at Align Bookstore</p>
         </div>
 
-        {/* Google Sign Up */}
         <button
-          onClick={() => signIn('google', { callbackUrl: '/library' })}
+          onClick={handleGoogle}
           className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-brand-200 rounded-pill hover:bg-surface-elevated transition-colors text-sm font-medium text-brand-950"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -100,9 +79,7 @@ export default function RegisterPage() {
         </button>
 
         <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-brand-200" />
-          </div>
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-brand-200" /></div>
           <div className="relative flex justify-center text-xs">
             <span className="px-3 bg-white text-brand-400">Or register with email</span>
           </div>
@@ -115,11 +92,9 @@ export default function RegisterPage() {
             { id: 'username', label: 'Username', type: 'text', placeholder: 'johndoe' },
             { id: 'password', label: 'Password', type: 'password', placeholder: 'Minimum 8 characters' },
             { id: 'confirmPassword', label: 'Confirm Password', type: 'password', placeholder: 'Repeat your password' },
-          ].map((field) => (
+          ].map(field => (
             <div key={field.id}>
-              <label htmlFor={field.id} className="block text-sm font-medium text-brand-950 mb-1.5">
-                {field.label}
-              </label>
+              <label htmlFor={field.id} className="block text-sm font-medium text-brand-950 mb-1.5">{field.label}</label>
               <input
                 id={field.id}
                 name={field.id}
@@ -132,7 +107,6 @@ export default function RegisterPage() {
               />
             </div>
           ))}
-
           <button
             type="submit"
             disabled={loading}
@@ -144,9 +118,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-sm text-brand-500">
           Already have an account?{' '}
-          <Link href="/auth/signin" className="text-brand-600 hover:text-brand-700 font-medium">
-            Sign in
-          </Link>
+          <Link href="/auth/signin" className="text-brand-600 hover:text-brand-700 font-medium">Sign in</Link>
         </p>
       </div>
     </div>

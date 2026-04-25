@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { useCart } from '@/context/CartContext';
+import { useUser } from '@/hooks/useUser';
 import { calculateShipping, isIbadan, FREE_SHIPPING_THRESHOLD } from '@/lib/shipping';
 
 interface ShippingForm {
@@ -21,13 +21,13 @@ interface ShippingForm {
 }
 
 export default function CheckoutPage() {
-  const { data: session, status } = useSession();
+  const { profile, status } = useUser();
   const { items, subtotal, clearCart } = useCart();
   const router = useRouter();
 
   const [form, setForm] = useState<ShippingForm>({
-    fullName: session?.user?.name || '',
-    email: session?.user?.email || '',
+    fullName: profile?.name || '',
+    email: profile?.email || '',
     phone: '',
     address: '',
     city: '',
@@ -47,8 +47,8 @@ export default function CheckoutPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!session) {
-      signIn();
+    if (!profile) {
+      window.location.href = '/auth/signin';
       return;
     }
 
@@ -114,13 +114,13 @@ export default function CheckoutPage() {
           <h1 className="text-3xl font-serif text-brand-950">Checkout</h1>
         </div>
 
-        {!session && (
+        {!profile && (
           <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-card flex items-center justify-between gap-4">
             <p className="text-sm text-amber-800">
               Sign in to complete your purchase and track your order
             </p>
             <button
-              onClick={() => signIn()}
+              onClick={() => window.location.href = '/auth/signin'}
               className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-pill hover:bg-amber-600 transition-colors flex-shrink-0"
             >
               Sign In
@@ -300,7 +300,7 @@ export default function CheckoutPage() {
                 </div>
                 <button
                   type="submit"
-                  disabled={loading || !session}
+                  disabled={loading || !profile}
                   className="w-full mt-5 py-3.5 bg-brand-600 text-white font-semibold rounded-pill hover:bg-brand-700 transition-colors shadow-glow disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
@@ -312,7 +312,7 @@ export default function CheckoutPage() {
                     `Pay ₦${total.toLocaleString()}`
                   )}
                 </button>
-                {!session && (
+                {!profile && (
                   <p className="text-xs text-brand-400 text-center mt-2">Sign in required to checkout</p>
                 )}
               </div>

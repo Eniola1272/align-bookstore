@@ -1,6 +1,5 @@
 'use client';
 
-import { SessionProvider } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
 import Navbar from '@/components/Navbar';
@@ -13,14 +12,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const isAdmin = pathname?.startsWith('/admin');
 
   return (
-    <SessionProvider>
-      <CartProvider>
-        {!isAdmin && <Navbar />}
-        {!isAdmin && <CartDrawer />}
-        {children}
-        {!isAdmin && <Footer />}
-        <Toaster position="top-right" richColors closeButton />
-      </CartProvider>
-    </SessionProvider>
+    <CartProvider>
+      {!isAdmin && <Navbar />}
+      {!isAdmin && <CartDrawer />}
+      {children}
+      {!isAdmin && <Footer />}
+      <Toaster position="top-right" richColors closeButton />
+    </CartProvider>
   );
 }

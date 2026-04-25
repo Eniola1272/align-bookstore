@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth/adminCheck';
-import connectDB from '@/lib/db/mongodb';
-import { Book } from '@/lib/db/models/Book';
+import { requireAdmin } from '@/lib/auth/session';
+import { getBookById, updateBook, deleteBook } from '@/lib/supabase/queries';
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    await connectDB();
-    const book = await Book.findById(params.id).lean();
+    const book = await getBookById(params.id);
     if (!book) return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     return NextResponse.json(book);
   } catch {
@@ -17,35 +12,23 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const { adminError } = await requireAdmin();
   if (adminError) return adminError;
-
   try {
-    await connectDB();
     const body = await req.json();
-    const book = await Book.findByIdAndUpdate(params.id, body, { new: true }).lean();
-    if (!book) return NextResponse.json({ error: 'Book not found' }, { status: 404 });
+    const book = await updateBook(params.id, body);
     return NextResponse.json(book);
   } catch {
     return NextResponse.json({ error: 'Failed to update book' }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const { adminError } = await requireAdmin();
   if (adminError) return adminError;
-
   try {
-    await connectDB();
-    const book = await Book.findByIdAndDelete(params.id);
-    if (!book) return NextResponse.json({ error: 'Book not found' }, { status: 404 });
+    await deleteBook(params.id);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete book' }, { status: 500 });

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/authOptions';
-import connectDB from '@/lib/db/mongodb';
-import { Order } from '@/lib/db/models/Order';
-import { Book } from '@/lib/db/models/Book';
+import { requireUser } from '@/lib/auth/session';
+import { getOrderByPaymentRef, createOrder, decrementBookStock } from '@/lib/supabase/queries';
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || '';
 
@@ -14,38 +11,25 @@ function generateOrderNumber() {
 }
 
 export async function GET(req: NextRequest) {
+  const { authError, user } = await requireUser();
+  if (authError) return authError;
+
+  const reference = new URL(req.url).searchParams.get('reference');
+  if (!reference) return NextResponse.json({ error: 'Missing payment reference' }, { status: 400 });
+
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const reference = new URL(req.url).searchParams.get('reference');
-    if (!reference) {
-      return NextResponse.json({ error: 'Missing payment reference' }, { status: 400 });
-    }
-
-    // Verify with Paystack
     const verifyRes = await fetch(
       `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
-      {
-        headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` },
-      }
+      { headers: { Authorization: `Bearer ${PAYSTACK_SECRET}` } }
     );
-
     const verifyData = await verifyRes.json();
 
     if (!verifyData.status || verifyData.data.status !== 'success') {
-      return NextResponse.json({ error: 'Payment not successful', status: verifyData.data?.status }, { status: 400 });
+      return NextResponse.json({ error: 'Payment not successful' }, { status: 400 });
     }
 
-    await connectDB();
-
-    // Idempotency: don't create duplicate orders
-    const existing = await Order.findOne({ stripePaymentIntentId: reference });
-    if (existing) {
-      return NextResponse.json({ order: existing });
-    }
+    const existing = await getOrderByPaymentRef(reference);
+    if (existing) return NextResponse.json({ order: existing });
 
     const metadata = verifyData.data.metadata || {};
     const items = JSON.parse(metadata.items || '[]');
@@ -54,13 +38,12 @@ export async function GET(req: NextRequest) {
     const shippingCost = metadata.shippingCost ?? 0;
     const total = metadata.total ?? verifyData.data.amount / 100;
 
-    // Decrement stock
     for (const item of items) {
-      await Book.findByIdAndUpdate(item.bookId, { $inc: { stock: -item.quantity } });
+      await decrementBookStock(item.bookId, item.quantity);
     }
 
-    const order = await Order.create({
-      userId: session.user.id,
+    const order = await createOrder({
+      userId: user!.id,
       orderNumber: generateOrderNumber(),
       items,
       shippingAddress,
@@ -70,7 +53,7 @@ export async function GET(req: NextRequest) {
       status: 'confirmed',
       paymentStatus: 'paid',
       paymentMethod: 'paystack',
-      stripePaymentIntentId: reference, // reusing field to store reference
+      paymentReference: reference,
     });
 
     return NextResponse.json({ order });

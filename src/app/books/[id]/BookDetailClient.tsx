@@ -8,18 +8,18 @@ import BookCard from '@/components/BookCard';
 import { toast } from 'sonner';
 
 interface Book {
-  _id: string;
+  id: string;
   title: string;
   author: string;
   description: string;
   price: number;
-  originalPrice?: number;
-  isbn?: string;
+  originalPrice?: number | null;
+  isbn?: string | null;
   genre: string;
-  subGenre?: string;
-  publisher?: string;
-  publishedYear?: number;
-  pages?: number;
+  subGenre?: string | null;
+  publisher?: string | null;
+  publishedYear?: number | null;
+  pages?: number | null;
   language: string;
   condition: string;
   coverImage: string;
@@ -58,7 +58,7 @@ export default function BookDetailClient({
   function handleAddToCart() {
     for (let i = 0; i < quantity; i++) {
       addItem({
-        bookId: book._id,
+        bookId: book.id,
         title: book.title,
         author: book.author,
         coverImage: book.coverImage,
@@ -286,7 +286,7 @@ export default function BookDetailClient({
             <h2 className="text-2xl font-serif text-brand-950 mb-6">More in {book.genre}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {relatedBooks.map(rb => (
-                <BookCard key={rb._id} book={rb} />
+                <BookCard key={rb.id} book={rb} />
               ))}
             </div>
           </section>

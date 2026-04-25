@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useUser } from '@/hooks/useUser';
 
 interface OrderItem {
   bookId: string;
@@ -39,7 +39,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function OrdersPage() {
-  const { status } = useSession();
+  const { status } = useUser();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 

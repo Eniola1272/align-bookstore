@@ -1,55 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/authOptions';
-import { requireAdmin } from '@/lib/auth/adminCheck';
-import connectDB from '@/lib/db/mongodb';
-import { Order } from '@/lib/db/models/Order';
+import { requireUser, requireAdmin } from '@/lib/auth/session';
+import { getProfileById, getOrderById, updateOrder } from '@/lib/supabase/queries';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const { authError, user } = await requireUser();
+  if (authError) return authError;
 
-    await connectDB();
+  const profile = await getProfileById(user!.id);
+  const isAdmin = profile?.role === 'admin';
 
-    // Admins can view any order; users can only view their own
-    const query =
-      session.user.role === 'admin'
-        ? { _id: params.id }
-        : { _id: params.id, userId: session.user.id };
-
-    const order = await Order.findOne(query).lean();
-    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
-
-    return NextResponse.json(order);
-  } catch {
-    return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 });
-  }
+  const order = await getOrderById(params.id, isAdmin ? undefined : user!.id);
+  if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+  return NextResponse.json(order);
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const { adminError } = await requireAdmin();
   if (adminError) return adminError;
 
   try {
-    await connectDB();
     const { status, paymentStatus, notes } = await req.json();
-
-    const update: Record<string, unknown> = {};
-    if (status) update.status = status;
-    if (paymentStatus) update.paymentStatus = paymentStatus;
-    if (notes !== undefined) update.notes = notes;
-
-    const order = await Order.findByIdAndUpdate(params.id, update, { new: true }).lean();
-    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    const order = await updateOrder(params.id, { status, paymentStatus, notes });
     return NextResponse.json(order);
   } catch {
     return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });

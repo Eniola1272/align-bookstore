@@ -1,24 +1,16 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth/authOptions';
 import { redirect } from 'next/navigation';
+import { createServerClient } from '@/lib/supabase/server';
+import { getProfileById } from '@/lib/supabase/queries';
 import EditProfileForm from '@/components/profile/EditProfileForm';
-import connectDB from '@/lib/db/mongodb';
-import User from '@/lib/db/models/User';
-
-async function getUser(userId: string) {
-  await connectDB();
-  const user = await User.findById(userId).select('-password').lean();
-  return JSON.parse(JSON.stringify(user));
-}
 
 export default async function EditProfilePage() {
-  const session = await getServerSession(authOptions);
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session?.user?.id) {
-    redirect('/auth/signin');
-  }
+  if (!user) redirect('/auth/signin');
 
-  const user = await getUser(session.user.id);
+  const profile = await getProfileById(user.id);
+  if (!profile) redirect('/auth/signin');
 
   return (
     <div className="min-h-screen bg-surface py-10">
@@ -28,7 +20,7 @@ export default async function EditProfilePage() {
           <p className="text-gray-500 mt-2">Update your personal information</p>
         </div>
 
-        <EditProfileForm user={user} />
+        <EditProfileForm user={{ name: profile.name, username: profile.username, email: user.email!, avatar: profile.avatar ?? undefined }} />
       </div>
     </div>
   );

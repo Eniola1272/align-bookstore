@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Profile {
+  id        String   @id // UUID from Supabase auth.users
+  name      String
+  username  String   @unique
+  avatar    String?
+  role      String   @default("user")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  orders    Order[]
+
+  @@map("profiles")
+}
+
+model Book {
+  id            String   @id @default(cuid())
+  title         String
+  author        String
+  description   String   @default("")
+  price         Float
+  originalPrice Float?   @map("original_price")
+  isbn          String?
+  genre         String
+  subGenre      String?  @map("sub_genre")
+  publisher     String?
+  publishedYear Int?     @map("published_year")
+  pages         Int?
+  language      String   @default("English")
+  condition     String   @default("new")
+  coverImage    String   @default("/book-placeholder.png") @map("cover_image")
+  stock         Int      @default(10)
+  rating        Float    @default(0)
+  reviewCount   Int      @default(0) @map("review_count")
+  featured      Boolean  @default(false)
+  bestseller    Boolean  @default(false)
+  tags          String[]
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("books")
+}
+
+model Order {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  orderNumber      String   @unique @map("order_number")
+  items            Json
+  shippingAddress  Json     @map("shipping_address")
+  subtotal         Float
+  shippingCost     Float    @default(0) @map("shipping_cost")
+  total            Float
+  status           String   @default("pending")
+  paymentStatus    String   @default("unpaid") @map("payment_status")
+  paymentMethod    String   @default("paystack") @map("payment_method")
+  paymentReference String?  @map("payment_reference")
+  notes            String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  profile Profile @relation(fields: [userId], references: [id])
+
+  @@map("orders")
+}

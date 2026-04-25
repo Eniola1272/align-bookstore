@@ -1,32 +1,26 @@
 import Link from "next/link";
 import BookCard from "@/components/BookCard";
-import connectDB from "@/lib/db/mongodb";
-import { Book } from "@/lib/db/models/Book";
+import { getBooks } from "@/lib/supabase/queries";
 import { AppData } from "@/lib/data";
 
 async function getFeaturedBooks() {
   try {
-    await connectDB();
-    const books = await Book.find({ stock: { $gt: 0 } })
-      .sort({ featured: -1, createdAt: -1 })
-      .limit(8)
-      .lean();
-    return JSON.parse(JSON.stringify(books));
-  } catch {
-    return [];
-  }
+    return await getBooks({
+      where: { stock: { gt: 0 } },
+      orderBy: [{ field: 'featured', direction: 'desc' }, { field: 'created_at', direction: 'desc' }],
+      take: 8,
+    });
+  } catch { return []; }
 }
 
 async function getBestsellers() {
   try {
-    await connectDB();
-    const books = await Book.find({ bestseller: true, stock: { $gt: 0 } })
-      .limit(4)
-      .lean();
-    return JSON.parse(JSON.stringify(books));
-  } catch {
-    return [];
-  }
+    return await getBooks({
+      where: { bestseller: true, stock: { gt: 0 } },
+      orderBy: [{ field: 'created_at', direction: 'desc' }],
+      take: 4,
+    });
+  } catch { return []; }
 }
 
 export default async function HomePage() {
@@ -140,8 +134,8 @@ export default async function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {featuredBooks.slice(0, 8).map((book: Parameters<typeof BookCard>[0]['book']) => (
-              <BookCard key={book._id} book={book} />
+            {featuredBooks.map((book) => (
+              <BookCard key={book.id} book={book} />
             ))}
           </div>
         </section>
@@ -164,8 +158,8 @@ export default async function HomePage() {
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {bestsellers.map((book: Parameters<typeof BookCard>[0]['book']) => (
-                <BookCard key={book._id} book={book} />
+              {bestsellers.map((book) => (
+                <BookCard key={book.id} book={book} />
               ))}
             </div>
           </div>
