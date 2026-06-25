@@ -56,6 +56,22 @@ export interface Order {
   updatedAt: Date;
 }
 
+export interface CustomOrder {
+  id: string;
+  userId: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  bookTitle: string;
+  bookAuthor: string;
+  isbn: string;
+  quantity: number;
+  notes: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // ── Mappers ───────────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,6 +107,25 @@ function mapOrder(r: any): Order {
     paymentMethod: r.payment_method ?? 'paystack',
     paymentReference: r.payment_reference ?? null, notes: r.notes ?? null,
     createdAt: new Date(r.created_at), updatedAt: new Date(r.updated_at),
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapCustomOrder(r: any): CustomOrder {
+  return {
+    id: r.id,
+    userId: r.user_id ?? null,
+    name: r.name,
+    email: r.email,
+    phone: r.phone,
+    bookTitle: r.book_title,
+    bookAuthor: r.book_author ?? '',
+    isbn: r.isbn ?? '',
+    quantity: r.quantity ?? 1,
+    notes: r.notes ?? '',
+    status: r.status ?? 'pending',
+    createdAt: new Date(r.created_at),
+    updatedAt: new Date(r.updated_at),
   };
 }
 
@@ -316,4 +351,38 @@ export async function sumOrderRevenue(): Promise<number> {
   const { data, error } = await supabaseAdmin.from('orders').select('total').eq('payment_status', 'paid');
   if (error) throw error;
   return (data ?? []).reduce((s, r) => s + (r.total as number), 0);
+}
+
+// ── Custom Order helpers ──────────────────────────────────────────────────────
+
+export async function createCustomOrder(data: {
+  userId?: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  bookTitle: string;
+  bookAuthor?: string;
+  isbn?: string;
+  quantity?: number;
+  notes?: string;
+}): Promise<CustomOrder> {
+  const { data: created, error } = await supabaseAdmin.from('custom_orders').insert({
+    user_id: data.userId ?? null,
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    book_title: data.bookTitle,
+    book_author: data.bookAuthor ?? '',
+    isbn: data.isbn ?? '',
+    quantity: data.quantity ?? 1,
+    notes: data.notes ?? '',
+  }).select().single();
+  if (error) throw error;
+  return mapCustomOrder(created);
+}
+
+export async function getCustomOrdersByUser(userId: string): Promise<CustomOrder[]> {
+  const { data, error } = await supabaseAdmin.from('custom_orders').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map(mapCustomOrder);
 }

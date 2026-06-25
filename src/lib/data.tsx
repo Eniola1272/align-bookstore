@@ -4,6 +4,7 @@ export const AppData = {
     { href: '/shop?genre=Fiction', label: 'Fiction' },
     { href: '/shop?genre=Non-Fiction', label: 'Non-Fiction' },
     { href: '/shop?bestseller=true', label: 'Bestsellers' },
+    { href: '/custom-order', label: 'Custom Order' },
   ],
 
   heroStats: [
@@ -110,6 +111,7 @@ export const AppData = {
       { label: 'Shipping Policy', href: '/shipping-policy' },
       { label: 'FAQ', href: '#' },
       { label: 'Returns', href: '#' },
+      { label: 'Custom Order', href: '/custom-order' },
       { label: 'Contact Us', href: '#' },
       { label: 'hello@alignbookstore.com', href: 'mailto:hello@alignbookstore.com' },
     ],

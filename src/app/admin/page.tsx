@@ -11,9 +11,9 @@ interface Stats {
   totalRevenue: number;
   pendingOrders: number;
   ordersByStatus: Record<string, number>;
-  lowStock: Array<{ _id: string; title: string; author: string; stock: number; coverImage?: string }>;
+  lowStock: Array<{ id: string; title: string; author: string; stock: number; coverImage?: string }>;
   recentOrders: Array<{
-    _id: string;
+    id: string;
     orderNumber: string;
     createdAt: string;
     total: number;
@@ -81,8 +81,8 @@ export default function AdminDashboard() {
             )}
             {stats.recentOrders.map(order => (
               <Link
-                key={order._id}
-                href={`/admin/orders/${order._id}`}
+                key={order.id}
+                href={`/admin/orders/${order.id}`}
                 className="flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
               >
                 <div>
@@ -112,8 +112,8 @@ export default function AdminDashboard() {
             )}
             {stats.lowStock.map(book => (
               <Link
-                key={book._id}
-                href={`/admin/books/${book._id}/edit`}
+                key={book.id}
+                href={`/admin/books/${book.id}/edit`}
                 className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors"
               >
                 <div className="relative w-8 h-11 flex-shrink-0 rounded overflow-hidden bg-gray-100">

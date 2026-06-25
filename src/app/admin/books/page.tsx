@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface Book {
-  _id: string;
+  id: string;
   title: string;
   author: string;
   genre: string;
@@ -61,7 +61,7 @@ export default function AdminBooksPage() {
     setDeleting(id);
     const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
     if (res.ok) {
-      setBooks(prev => prev.filter(b => b._id !== id));
+      setBooks(prev => prev.filter(b => b.id !== id));
       setTotal(prev => prev - 1);
       toast.success(`"${title}" removed from catalog.`);
     } else {
@@ -138,7 +138,7 @@ export default function AdminBooksPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {books.map(book => (
-                <tr key={book._id} className="hover:bg-gray-50/50 transition-colors">
+                <tr key={book.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="relative w-8 h-11 rounded overflow-hidden bg-gray-100 flex-shrink-0">
                       <Image
@@ -183,17 +183,17 @@ export default function AdminBooksPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => router.push(`/admin/books/${book._id}/edit`)}
+                        onClick={() => router.push(`/admin/books/${book.id}/edit`)}
                         className="px-3 py-1.5 text-xs font-medium text-brand-600 border border-brand-200 rounded-lg hover:bg-brand-50 transition-colors"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(book._id, book.title)}
-                        disabled={deleting === book._id}
+                        onClick={() => handleDelete(book.id, book.title)}
+                        disabled={deleting === book.id}
                         className="px-3 py-1.5 text-xs font-medium text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
                       >
-                        {deleting === book._id ? '…' : 'Delete'}
+                        {deleting === book.id ? '…' : 'Delete'}
                       </button>
                     </div>
                   </td>

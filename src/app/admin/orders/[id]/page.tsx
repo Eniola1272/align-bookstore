@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 
 interface Order {
-  _id: string;
+  id: string;
   orderNumber: string;
   createdAt: string;
   updatedAt: string;

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 
 interface Order {
-  _id: string;
+  id: string;
   orderNumber: string;
   createdAt: string;
   total: number;
@@ -105,7 +105,7 @@ export default function AdminOrdersPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {orders.map(order => (
-                <tr key={order._id} className="hover:bg-gray-50/50 transition-colors">
+                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-4 py-3">
                     <p className="font-medium text-gray-900">{order.orderNumber}</p>
                     <p className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleDateString()}</p>
@@ -130,7 +130,7 @@ export default function AdminOrdersPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
-                      href={`/admin/orders/${order._id}`}
+                      href={`/admin/orders/${order.id}`}
                       className="px-3 py-1.5 text-xs font-medium text-brand-600 border border-brand-200 rounded-lg hover:bg-brand-50 transition-colors"
                     >
                       View
