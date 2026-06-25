@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/session';
 import { getBookById, updateBook, deleteBook } from '@/lib/supabase/queries';
 
+const BOOK_STATUSES = new Set(['active', 'draft']);
+
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const book = await getBookById(params.id);
@@ -17,6 +19,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (adminError) return adminError;
   try {
     const body = await req.json();
+    if (body.status && !BOOK_STATUSES.has(body.status)) {
+      return NextResponse.json({ error: 'Invalid book status' }, { status: 400 });
+    }
     const book = await updateBook(params.id, body);
     return NextResponse.json(book);
   } catch {

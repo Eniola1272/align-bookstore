@@ -19,6 +19,7 @@ export interface Book {
   condition: string;
   coverImage: string;
   stock: number;
+  status: string;
   rating: number;
   reviewCount: number;
   featured: boolean;
@@ -82,7 +83,7 @@ function mapBook(r: any): Book {
     isbn: r.isbn ?? null, genre: r.genre, subGenre: r.sub_genre ?? null,
     publisher: r.publisher ?? null, publishedYear: r.published_year ?? null,
     pages: r.pages ?? null, language: r.language, condition: r.condition,
-    coverImage: r.cover_image, stock: r.stock, rating: r.rating,
+    coverImage: r.cover_image, stock: r.stock, status: r.status ?? 'active', rating: r.rating,
     reviewCount: r.review_count, featured: r.featured, bestseller: r.bestseller,
     tags: r.tags ?? [],
     createdAt: new Date(r.created_at), updatedAt: new Date(r.updated_at),
@@ -135,6 +136,7 @@ interface BookFilter {
   genre?: string;
   bestseller?: boolean;
   condition?: string;
+  status?: string;
   stock?: { gt?: number; lte?: number };
   search?: string;
   price?: { gte?: number; lte?: number };
@@ -145,6 +147,7 @@ function applyBookFilters(query: any, where: BookFilter): any {
   if (where.genre && where.genre !== 'all') query = query.eq('genre', where.genre);
   if (where.bestseller !== undefined) query = query.eq('bestseller', where.bestseller);
   if (where.condition) query = query.eq('condition', where.condition);
+  if (where.status) query = query.eq('status', where.status);
   if (where.stock?.gt !== undefined) query = query.gt('stock', where.stock.gt);
   if (where.stock?.lte !== undefined) query = query.lte('stock', where.stock.lte);
   if (where.price?.gte !== undefined) query = query.gte('price', where.price.gte);
@@ -184,8 +187,10 @@ export async function countBooks(where: BookFilter = {}): Promise<number> {
   return count ?? 0;
 }
 
-export async function getBookById(id: string): Promise<Book | null> {
-  const { data, error } = await supabaseAdmin.from('books').select('*').eq('id', id).maybeSingle();
+export async function getBookById(id: string, opts: { includeDrafts?: boolean } = {}): Promise<Book | null> {
+  let q = supabaseAdmin.from('books').select('*').eq('id', id);
+  if (!opts.includeDrafts) q = q.eq('status', 'active');
+  const { data, error } = await q.maybeSingle();
   if (error || !data) return null;
   return mapBook(data);
 }
@@ -199,7 +204,7 @@ export async function createBook(data: Record<string, any>): Promise<Book> {
     publisher: data.publisher ?? null, published_year: data.publishedYear ?? null,
     pages: data.pages ?? null, language: data.language ?? 'English',
     condition: data.condition ?? 'new', cover_image: data.coverImage ?? '/book-placeholder.png',
-    stock: data.stock ?? 0, rating: data.rating ?? 0, review_count: data.reviewCount ?? 0,
+    stock: data.stock ?? 0, status: data.status ?? 'active', rating: data.rating ?? 0, review_count: data.reviewCount ?? 0,
     featured: data.featured ?? false, bestseller: data.bestseller ?? false,
     tags: data.tags ?? [],
   };

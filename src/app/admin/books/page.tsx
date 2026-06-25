@@ -14,13 +14,14 @@ interface Book {
   price: number;
   originalPrice?: number;
   stock: number;
+  status: string;
   condition: string;
   featured: boolean;
   bestseller: boolean;
   coverImage?: string;
 }
 
-type SortField = 'createdAt' | 'title' | 'genre' | 'price' | 'stock' | 'condition';
+type SortField = 'createdAt' | 'title' | 'genre' | 'price' | 'stock' | 'status' | 'condition';
 type SortOrder = 'asc' | 'desc';
 
 const conditionColors: Record<string, string> = {
@@ -42,6 +43,7 @@ export default function AdminBooksPage() {
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [savingStatus, setSavingStatus] = useState<string | null>(null);
 
   const fetchBooks = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -50,6 +52,7 @@ export default function AdminBooksPage() {
       limit: '20',
       sort: sortBy,
       order: sortOrder,
+      status: 'all',
     });
     if (search) params.set('search', search);
     try {
@@ -104,6 +107,25 @@ export default function AdminBooksPage() {
       toast.error('Failed to delete book. Please try again.');
     }
     setDeleting(null);
+  }
+
+  async function handleStatusChange(book: Book) {
+    const nextStatus = book.status === 'active' ? 'draft' : 'active';
+    setSavingStatus(book.id);
+    const res = await fetch(`/api/products/${book.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: nextStatus }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      setBooks(prev => prev.map(item => item.id === book.id ? { ...item, status: data.status } : item));
+      toast.success(`"${book.title}" is now ${nextStatus}.`);
+    } else {
+      toast.error(data.error || 'Failed to update book status.');
+    }
+    setSavingStatus(null);
   }
 
   const pages = Math.ceil(total / 20);
@@ -181,6 +203,9 @@ export default function AdminBooksPage() {
                 <th className="text-left px-4 py-3 font-semibold text-gray-600" aria-sort={sortBy === 'stock' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}>
                   <SortHeader label="Stock" field="stock" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
                 </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600" aria-sort={sortBy === 'status' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                  <SortHeader label="Status" field="status" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                </th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden lg:table-cell" aria-sort={sortBy === 'condition' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}>
                   <SortHeader label="Condition" field="condition" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
                 </th>
@@ -225,6 +250,21 @@ export default function AdminBooksPage() {
                     }`}>
                       {book.stock === 0 ? 'Out' : book.stock}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => handleStatusChange(book)}
+                      disabled={savingStatus === book.id}
+                      className={`text-xs px-2 py-0.5 rounded-full capitalize font-medium transition-colors disabled:opacity-60 ${
+                        book.status === 'active'
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                      title={book.status === 'active' ? 'Set as draft' : 'Set as active'}
+                    >
+                      {savingStatus === book.id ? 'Saving…' : book.status}
+                    </button>
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
                     <span className={`text-xs px-2 py-0.5 rounded-full capitalize font-medium ${conditionColors[book.condition] || 'bg-gray-100 text-gray-600'}`}>

@@ -6,7 +6,7 @@ import BookForm, { BookFormData } from '@/components/admin/BookForm';
 export const metadata = { title: 'Edit Book — Admin' };
 
 export default async function EditBookPage({ params }: { params: { id: string } }) {
-  const book = await getBookById(params.id);
+  const book = await getBookById(params.id, { includeDrafts: true });
   if (!book) notFound();
 
   const initialData: Partial<BookFormData> = {
@@ -23,6 +23,7 @@ export default async function EditBookPage({ params }: { params: { id: string } 
     pages: book.pages ? String(book.pages) : '',
     language: book.language,
     condition: book.condition,
+    status: book.status,
     coverImage: book.coverImage,
     stock: String(book.stock),
     featured: book.featured,

@@ -6,7 +6,7 @@ import { AppData } from "@/lib/data";
 async function getFeaturedBooks() {
   try {
     return await getBooks({
-      where: { stock: { gt: 0 } },
+      where: { status: 'active', stock: { gt: 0 } },
       orderBy: [{ field: 'featured', direction: 'desc' }, { field: 'created_at', direction: 'desc' }],
       take: 8,
     });
@@ -16,7 +16,7 @@ async function getFeaturedBooks() {
 async function getBestsellers() {
   try {
     return await getBooks({
-      where: { bestseller: true, stock: { gt: 0 } },
+      where: { status: 'active', bestseller: true, stock: { gt: 0 } },
       orderBy: [{ field: 'created_at', direction: 'desc' }],
       take: 4,
     });

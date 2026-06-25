@@ -7,7 +7,7 @@ export default async function BookDetailPage({ params }: { params: { id: string 
   if (!book) notFound();
 
   const relatedBooks = await getBooks({
-    where: { genre: book.genre, stock: { gt: 0 } },
+    where: { status: 'active', genre: book.genre, stock: { gt: 0 } },
     take: 5,
   }).then(books => books.filter(b => b.id !== book.id).slice(0, 4)).catch(() => []);
 

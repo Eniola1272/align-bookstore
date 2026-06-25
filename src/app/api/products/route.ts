@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/session';
 import { getBooks, countBooks, createBook } from '@/lib/supabase/queries';
 
+const BOOK_STATUSES = new Set(['active', 'draft']);
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -13,13 +15,25 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '24');
     const bestseller = searchParams.get('bestseller');
     const condition = searchParams.get('condition') ?? undefined;
+    const status = searchParams.get('status') || 'active';
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
+
+    if (status === 'all') {
+      const { adminError } = await requireAdmin();
+      if (adminError) return adminError;
+    } else if (!BOOK_STATUSES.has(status)) {
+      return NextResponse.json({ error: 'Invalid book status' }, { status: 400 });
+    } else if (status !== 'active') {
+      const { adminError } = await requireAdmin();
+      if (adminError) return adminError;
+    }
 
     const where = {
       ...(genre && genre !== 'all' ? { genre } : {}),
       ...(bestseller === 'true' ? { bestseller: true } : {}),
       ...(condition ? { condition } : {}),
+      ...(status !== 'all' ? { status } : {}),
       ...(minPrice || maxPrice ? { price: { gte: minPrice ? parseFloat(minPrice) : undefined, lte: maxPrice ? parseFloat(maxPrice) : undefined } } : {}),
       ...(search ? { search } : {}),
     };
@@ -43,6 +57,9 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+    if (body.status && !BOOK_STATUSES.has(body.status)) {
+      return NextResponse.json({ error: 'Invalid book status' }, { status: 400 });
+    }
     const book = await createBook(body);
     return NextResponse.json(book, { status: 201 });
   } catch (error) {

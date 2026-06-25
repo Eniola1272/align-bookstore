@@ -19,6 +19,7 @@ export interface BookFormData {
   pages: string;
   language: string;
   condition: string;
+  status: string;
   coverImage: string;
   stock: string;
   featured: boolean;
@@ -36,7 +37,7 @@ const empty: BookFormData = {
   title: '', author: '', description: '', price: '', originalPrice: '',
   isbn: '', genre: 'Fiction', subGenre: '', publisher: '', publishedYear: '',
   pages: '', language: 'English', condition: 'new', coverImage: '',
-  stock: '10', featured: false, bestseller: false, tags: '',
+  stock: '10', status: 'active', featured: false, bestseller: false, tags: '',
 };
 
 interface Props {
@@ -77,6 +78,7 @@ export default function BookForm({ initialData, bookId }: Props) {
       pages: form.pages ? parseInt(form.pages) : undefined,
       language: form.language,
       condition: form.condition,
+      status: form.status,
       coverImage: form.coverImage.trim() || '/book-placeholder.png',
       stock: parseInt(form.stock),
       featured: form.featured,
@@ -217,6 +219,12 @@ export default function BookForm({ initialData, bookId }: Props) {
           {/* Flags */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
             <h2 className="font-semibold text-gray-900 mb-1">Visibility</h2>
+            <Field label="Catalog status">
+              <select name="status" value={form.status} onChange={handleChange} className={input}>
+                <option value="active">Active</option>
+                <option value="draft">Draft</option>
+              </select>
+            </Field>
             <label className="flex items-center gap-3 cursor-pointer">
               <input type="checkbox" name="featured" checked={form.featured} onChange={handleChange} className="w-4 h-4 accent-brand-600" />
               <div>

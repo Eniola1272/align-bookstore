@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     if (!items?.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
 
     const bookIds: string[] = items.map((i: { bookId: string }) => i.bookId);
-    const books = await getBooks({ where: {} });
+    const books = await getBooks({ where: { status: 'active' } });
     const bookMap = new Map(books.filter(b => bookIds.includes(b.id)).map(b => [b.id, b]));
 
     let subtotal = 0;
