@@ -38,7 +38,6 @@ model Book {
   condition     String   @default("new")
   coverImage    String   @default("/book-placeholder.png") @map("cover_image")
   stock         Int      @default(10)
-  status        String   @default("active")
   rating        Float    @default(0)
   reviewCount   Int      @default(0) @map("review_count")
   featured      Boolean  @default(false)
