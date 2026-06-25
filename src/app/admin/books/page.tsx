@@ -20,6 +20,9 @@ interface Book {
   coverImage?: string;
 }
 
+type SortField = 'createdAt' | 'title' | 'genre' | 'price' | 'stock' | 'condition';
+type SortOrder = 'asc' | 'desc';
+
 const conditionColors: Record<string, string> = {
   new: 'bg-green-100 text-green-700',
   'like-new': 'bg-teal-100 text-teal-700',
@@ -34,26 +37,59 @@ export default function AdminBooksPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [sortBy, setSortBy] = useState<SortField>('createdAt');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  const fetchBooks = useCallback(async () => {
+  const fetchBooks = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), limit: '20' });
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: '20',
+      sort: sortBy,
+      order: sortOrder,
+    });
     if (search) params.set('search', search);
-    const res = await fetch(`/api/products?${params}`);
-    const data = await res.json();
-    setBooks(data.books || []);
-    setTotal(data.pagination?.total || 0);
-    setLoading(false);
-  }, [page, search]);
+    try {
+      const res = await fetch(`/api/products?${params}`, { signal });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch books');
+      setBooks(data.books || []);
+      setTotal(data.pagination?.total || 0);
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        toast.error('Failed to refresh books. Please try again.');
+      }
+    } finally {
+      if (!signal?.aborted) {
+        setHasLoaded(true);
+        setLoading(false);
+      }
+    }
+  }, [page, search, sortBy, sortOrder]);
 
-  useEffect(() => { fetchBooks(); }, [fetchBooks]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchBooks(controller.signal);
+    return () => controller.abort();
+  }, [fetchBooks]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     setPage(1);
     setSearch(searchInput);
+  }
+
+  function handleSort(field: SortField) {
+    setPage(1);
+    if (sortBy === field) {
+      setSortOrder(order => order === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+    setSortBy(field);
+    setSortOrder('asc');
   }
 
   async function handleDelete(id: string, title: string) {
@@ -116,8 +152,13 @@ export default function AdminBooksPage() {
       </form>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {loading ? (
+      <div className="relative bg-white rounded-xl border border-gray-200 overflow-hidden" aria-busy={loading}>
+        {hasLoaded && loading && (
+          <div className="absolute inset-x-0 top-0 z-10 h-1 bg-gray-100 overflow-hidden">
+            <div className="h-full w-1/3 bg-brand-500 animate-[pulse_1s_ease-in-out_infinite]" />
+          </div>
+        )}
+        {!hasLoaded && loading ? (
           <div className="flex items-center justify-center h-48">
             <div className="w-6 h-6 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" />
           </div>
@@ -128,11 +169,21 @@ export default function AdminBooksPage() {
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th className="text-left px-4 py-3 font-semibold text-gray-600 w-12"></th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600">Title</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden md:table-cell">Genre</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600">Price</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600">Stock</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden lg:table-cell">Condition</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600" aria-sort={sortBy === 'title' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                  <SortHeader label="Title" field="title" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden md:table-cell" aria-sort={sortBy === 'genre' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                  <SortHeader label="Genre" field="genre" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600" aria-sort={sortBy === 'price' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                  <SortHeader label="Price" field="price" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600" aria-sort={sortBy === 'stock' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                  <SortHeader label="Stock" field="stock" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                </th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden lg:table-cell" aria-sort={sortBy === 'condition' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                  <SortHeader label="Condition" field="condition" sortBy={sortBy} sortOrder={sortOrder} onSort={handleSort} />
+                </th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-600">Actions</th>
               </tr>
             </thead>
@@ -227,5 +278,49 @@ export default function AdminBooksPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function SortHeader({
+  label,
+  field,
+  sortBy,
+  sortOrder,
+  onSort,
+}: {
+  label: string;
+  field: SortField;
+  sortBy: SortField;
+  sortOrder: SortOrder;
+  onSort: (field: SortField) => void;
+}) {
+  const active = sortBy === field;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(field)}
+      className={`group inline-flex items-center gap-1.5 rounded-md -mx-2 px-2 py-1 text-left transition-colors ${
+        active ? 'text-gray-900' : 'text-gray-600 hover:text-gray-900'
+      }`}
+    >
+      <span>{label}</span>
+      <svg
+        className={`w-3.5 h-3.5 transition-colors ${active ? 'text-brand-600' : 'text-gray-300 group-hover:text-gray-500'}`}
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        {active && sortOrder === 'asc' ? (
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+        ) : (
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        )}
+      </svg>
+      <span className="sr-only">
+        {active ? `Sorted ${sortOrder === 'asc' ? 'ascending' : 'descending'}. Activate to reverse sort.` : 'Activate to sort ascending.'}
+      </span>
+    </button>
   );
 }
